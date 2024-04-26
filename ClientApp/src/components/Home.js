@@ -1,26 +1,72 @@
 import React, { Component } from 'react';
 
 export class Home extends Component {
-  static displayName = Home.name;
+    static displayName = Home.name;
 
-  render () {
-    return (
-      <div>
-        <h1>Hello, world!</h1>
-        <p>Welcome to your new single-page application, built with:</p>
-        <ul>
-          <li><a href='https://get.asp.net/'>ASP.NET Core</a> and <a href='https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx'>C#</a> for cross-platform server-side code</li>
-          <li><a href='https://facebook.github.io/react/'>React</a> for client-side code</li>
-          <li><a href='http://getbootstrap.com/'>Bootstrap</a> for layout and styling</li>
-        </ul>
-        <p>To help you get started, we have also set up:</p>
-        <ul>
-          <li><strong>Client-side navigation</strong>. For example, click <em>Counter</em> then <em>Back</em> to return here.</li>
-          <li><strong>Development server integration</strong>. In development mode, the development server from <code>create-react-app</code> runs in the background automatically, so your client-side resources are dynamically built on demand and the page refreshes when you modify any file.</li>
-          <li><strong>Efficient production builds</strong>. In production mode, development-time features are disabled, and your <code>dotnet publish</code> configuration produces minified, efficiently bundled JavaScript files.</li>
-        </ul>
-        <p>The <code>ClientApp</code> subdirectory is a standard React application based on the <code>create-react-app</code> template. If you open a command prompt in that directory, you can run <code>npm</code> commands such as <code>npm test</code> or <code>npm install</code>.</p>
-      </div>
-    );
-  }
+    constructor(props) {
+        super(props);
+        this.state = { currentCount: 0 };
+        this.fetchNumberInWords = this.fetchNumberInWords.bind(this);
+    }
+
+    fetchNumberInWords(event) {
+        const value = event.target.value;
+
+        this.setState({
+            currentCount: Number(value)
+        });
+        this.clearState();
+        if (value.length > 0) {
+            this.ConvertNumberToWords({ number: value });
+        }
+     
+    }
+
+    render () {
+        return (
+            <div>
+                <input
+                    type="text"
+                    pattern="^\d{1,3}(,\d{3})*(\.\d{2})?$"
+                    title="Please enter a valid currency amount"
+                    placeholder="0,00"
+                    onChange={this.fetchNumberInWords}
+                />
+                {this.state.error && (
+                    <div className="alert alert-danger mt-3" role="alert">
+                        {this.state.error}
+                    </div>
+                )}
+                {this.state.words && (<div class="alert alert-success mt-3" role="alert">
+                    {this.state.words}
+                </div>)}
+                
+                
+            </div>
+            );
+    }
+
+    async ConvertNumberToWords(parameters) {
+        console.log(parameters);
+        const url = `qoniac/numbertowords?${new URLSearchParams(parameters).toString()}`;
+        const response = await fetch(url);
+        const data = await response.text();
+        console.log(data);
+        switch (response.status) {
+            case 400:
+                this.setState({ error: data, loading: false });
+                break;
+            default:
+                this.setState({ words: data, loading: false });
+                break;
+        }
+    }
+
+    clearState() {
+        this.setState({
+            error: null,
+            words: null,
+            loading: false
+        });
+    }
 }
